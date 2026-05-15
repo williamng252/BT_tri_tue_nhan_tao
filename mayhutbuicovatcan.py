@@ -28,10 +28,7 @@ class VacuumRobot:
         print("-" * 30)
 
     def possible_move(self) -> List[str]:
-        """
-        Tập luật 1 (Nâng cấp): Xác định hướng đi hợp lệ.
-        Điều kiện: Không đâm vào tường mép VÀ không đâm vào vật cản (giá trị = 2).
-        """
+        
         moves = []
         # Kiểm tra lên trên: Không sát mép trên VÀ ô phía trên không phải là 2
         if self.x > 0 and self.grid[self.x - 1][self.y] != 2:
@@ -80,7 +77,7 @@ class VacuumRobot:
                 print("THẤT BẠI: Robot bị kẹt cứng giữa các vật cản và không thể di chuyển!")
                 break
 
-            # --- Tập luật 2: Quyết định hành động ---
+          
             if current_value == 1:
                 # Nếu có bụi -> Hút bụi (chuyển 1 thành 0)
                 self.grid[self.x][self.y] = 0
@@ -106,8 +103,7 @@ class VacuumRobot:
             print(f"CẢNH BÁO: Đã đạt giới hạn {max_steps} bước nhưng chưa dọn xong.")
 
 if __name__ == "__main__":
-    # Khởi tạo bản đồ 4x4 để có không gian di chuyển rộng hơn
-    # 1: Có bụi, 0: Sạch, 2: Vật cản
+   
     room_grid = [
         [0, 1, 0, 2],
         [0, 2, 0, 1],
