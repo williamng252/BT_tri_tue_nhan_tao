@@ -4,6 +4,9 @@ import bfs1
 import bfs2
 import dfs1
 import dfs2
+import ids1
+import ids2
+import ucs
 
 class VacuumVisualizer:
     def __init__(self, root):
@@ -37,6 +40,15 @@ class VacuumVisualizer:
         
         self.btn_dfs2 = tk.Button(left_frame, text="DFS Tiếp cận 2\n(Early Test)", bg="#fce4ec", command=lambda: self.run_algo(dfs2.solve, "DFS Tiếp cận 2"), **btn_config)
         self.btn_dfs2.pack(pady=8)
+        
+        self.btn_ids1 = tk.Button(left_frame, text="IDS Tiếp cận 1\n(Late Test)", bg="#e8f5e9", command=lambda: self.run_algo(ids1.solve, "IDS Tiếp cận 1"), **btn_config)
+        self.btn_ids1.pack(pady=8)
+        
+        self.btn_ids2 = tk.Button(left_frame, text="IDS Tiếp cận 2\n(Early Test)", bg="#e8f5e9", command=lambda: self.run_algo(ids2.solve, "IDS Tiếp cận 2"), **btn_config)
+        self.btn_ids2.pack(pady=8)
+        
+        self.btn_ucs = tk.Button(left_frame, text="UCS\n(Uniform Cost Search)", bg="#fff3e0", command=lambda: self.run_algo(ucs.solve, "UCS"), **btn_config)
+        self.btn_ucs.pack(pady=8)
         
         tk.Frame(left_frame, height=2, bg="#cccccc").pack(fill=tk.X, pady=10, padx=10)
         
@@ -96,6 +108,9 @@ class VacuumVisualizer:
         self.btn_bfs2.config(state=state)
         self.btn_dfs1.config(state=state)
         self.btn_dfs2.config(state=state)
+        self.btn_ids1.config(state=state)
+        self.btn_ids2.config(state=state)
+        self.btn_ucs.config(state=state)
         self.btn_reset.config(state=state)
         self.speed_scale.config(state=state)
         
