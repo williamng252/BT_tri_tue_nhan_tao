@@ -7,6 +7,8 @@ import dfs2
 import ids1
 import ids2
 import ucs
+import greedy
+import Astar
 
 class VacuumVisualizer:
     def __init__(self, root):
@@ -25,30 +27,36 @@ class VacuumVisualizer:
         left_frame = tk.Frame(self.root, width=220, bg="#ffffff", relief="ridge", borderwidth=2)
         left_frame.pack(side=tk.LEFT, fill=tk.Y, padx=10, pady=10)
         
-        tk.Label(left_frame, text="ĐIỀU KHIỂN", font=("Segoe UI", 14, "bold"), bg="#ffffff").pack(pady=20)
+        tk.Label(left_frame, text="ĐIỀU KHIỂN", font=("Segoe UI", 14, "bold"), bg="#ffffff").pack(pady=10)
         
-        btn_config = {"font": ("Segoe UI", 11), "width": 20, "height": 2, "cursor": "hand2"}
+        btn_config = {"font": ("Segoe UI", 11), "width": 20, "cursor": "hand2"}
         
         self.btn_bfs1 = tk.Button(left_frame, text="BFS Tiếp cận 1\n(Late Test)", bg="#e3f2fd", command=lambda: self.run_algo(bfs1.solve, "BFS Tiếp cận 1"), **btn_config)
-        self.btn_bfs1.pack(pady=8)
+        self.btn_bfs1.pack(pady=4)
         
         self.btn_bfs2 = tk.Button(left_frame, text="BFS Tiếp cận 2\n(Early Test)", bg="#e3f2fd", command=lambda: self.run_algo(bfs2.solve, "BFS Tiếp cận 2"), **btn_config)
-        self.btn_bfs2.pack(pady=8)
+        self.btn_bfs2.pack(pady=4)
         
         self.btn_dfs1 = tk.Button(left_frame, text="DFS Tiếp cận 1\n(Late Test)", bg="#fce4ec", command=lambda: self.run_algo(dfs1.solve, "DFS Tiếp cận 1"), **btn_config)
-        self.btn_dfs1.pack(pady=8)
+        self.btn_dfs1.pack(pady=4)
         
         self.btn_dfs2 = tk.Button(left_frame, text="DFS Tiếp cận 2\n(Early Test)", bg="#fce4ec", command=lambda: self.run_algo(dfs2.solve, "DFS Tiếp cận 2"), **btn_config)
-        self.btn_dfs2.pack(pady=8)
+        self.btn_dfs2.pack(pady=4)
         
         self.btn_ids1 = tk.Button(left_frame, text="IDS Tiếp cận 1\n(Late Test)", bg="#e8f5e9", command=lambda: self.run_algo(ids1.solve, "IDS Tiếp cận 1"), **btn_config)
-        self.btn_ids1.pack(pady=8)
+        self.btn_ids1.pack(pady=4)
         
         self.btn_ids2 = tk.Button(left_frame, text="IDS Tiếp cận 2\n(Early Test)", bg="#e8f5e9", command=lambda: self.run_algo(ids2.solve, "IDS Tiếp cận 2"), **btn_config)
-        self.btn_ids2.pack(pady=8)
+        self.btn_ids2.pack(pady=4)
         
         self.btn_ucs = tk.Button(left_frame, text="UCS\n(Uniform Cost Search)", bg="#fff3e0", command=lambda: self.run_algo(ucs.solve, "UCS"), **btn_config)
-        self.btn_ucs.pack(pady=8)
+        self.btn_ucs.pack(pady=4)
+        
+        self.btn_greedy = tk.Button(left_frame, text="Greedy Best-First", bg="#dcedc8", command=lambda: self.run_algo(greedy.solve, "Greedy Best-First"), **btn_config)
+        self.btn_greedy.pack(pady=4)
+        
+        self.btn_astar = tk.Button(left_frame, text="A* Search", bg="#d1c4e9", command=lambda: self.run_algo(Astar.solve, "A* Search"), **btn_config)
+        self.btn_astar.pack(pady=4)
         
         tk.Frame(left_frame, height=2, bg="#cccccc").pack(fill=tk.X, pady=10, padx=10)
         
@@ -111,6 +119,8 @@ class VacuumVisualizer:
         self.btn_ids1.config(state=state)
         self.btn_ids2.config(state=state)
         self.btn_ucs.config(state=state)
+        self.btn_greedy.config(state=state)
+        self.btn_astar.config(state=state)
         self.btn_reset.config(state=state)
         self.speed_scale.config(state=state)
         
@@ -199,14 +209,14 @@ class VacuumVisualizer:
         self.lbl_time.config(text=f"Thời gian chạy: {exec_time:.5f}s")
         
         if not goal_node:
-            self.log("❌ Không tìm thấy đường đi!")
+            self.log(" Không tìm thấy đường đi!")
             self.lbl_path_cost.config(text="Số bước đi (Cost): Không có")
             self.is_running = False
             self.set_buttons_state(tk.NORMAL)
             return
             
         frames = self.get_path_frames(goal_node)
-        self.log(f"✅ Tìm thấy Goal! Lộ trình: {len(frames)-1} bước.")
+        self.log(f"Tìm thấy Goal! Lộ trình: {len(frames)-1} bước.")
         self.lbl_path_cost.config(text=f"Số bước đi (Cost): {len(frames)-1}")
         
         # Bắt đầu hiệu ứng trượt mượt mà
@@ -214,7 +224,7 @@ class VacuumVisualizer:
         
     def animate_frames(self, frames, index):
         if index >= len(frames):
-            self.log("\n🎉 HOÀN THÀNH LỘ TRÌNH!")
+            self.log("\n HOÀN THÀNH LỘ TRÌNH!")
             self.is_running = False
             self.set_buttons_state(tk.NORMAL)
             self.draw_grid() # Cleanup
@@ -222,7 +232,7 @@ class VacuumVisualizer:
             
         frame = frames[index]
         next_pos = frame["robot_pos"]
-        self.current_dirts = frame["dirts"]
+        self.current_dirts = set(frame["dirts"])
         
         self.draw_background()
         self.smooth_move(self.current_pos, next_pos, frame, frames, index)
