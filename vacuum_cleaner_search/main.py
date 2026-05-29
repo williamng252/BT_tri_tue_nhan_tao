@@ -9,6 +9,8 @@ import ids2
 import ucs
 import greedy
 import Astar
+import idastar
+import hill_climbing
 
 class VacuumVisualizer:
     def __init__(self, root):
@@ -18,6 +20,13 @@ class VacuumVisualizer:
         self.root.configure(bg="#f4f4f4")
         
         self.is_running = False
+        self.group_states = {
+            "bfs": False,
+            "dfs": False,
+            "ids": False,
+            "hill": False,
+            "others": False
+        }
         
         self.create_widgets()
         self.reset_state()
@@ -30,33 +39,92 @@ class VacuumVisualizer:
         tk.Label(left_frame, text="ĐIỀU KHIỂN", font=("Segoe UI", 14, "bold"), bg="#ffffff").pack(pady=10)
         
         btn_config = {"font": ("Segoe UI", 11), "width": 20, "cursor": "hand2"}
+        btn_toggle_config = {"font": ("Segoe UI", 11, "bold"), "width": 20, "cursor": "hand2", "relief": "raised", "bd": 1}
+        btn_sub_config = {"font": ("Segoe UI", 10), "width": 20, "cursor": "hand2", "relief": "groove", "bd": 1}
         
-        self.btn_bfs1 = tk.Button(left_frame, text="BFS Tiếp cận 1\n(Late Test)", bg="#e3f2fd", command=lambda: self.run_algo(bfs1.solve, "BFS Tiếp cận 1"), **btn_config)
-        self.btn_bfs1.pack(pady=4)
+        # --- 1. Nhóm BFS ---
+        self.bfs_container = tk.Frame(left_frame, bg="#ffffff")
+        self.bfs_container.pack(fill=tk.X, pady=3)
         
-        self.btn_bfs2 = tk.Button(left_frame, text="BFS Tiếp cận 2\n(Early Test)", bg="#e3f2fd", command=lambda: self.run_algo(bfs2.solve, "BFS Tiếp cận 2"), **btn_config)
-        self.btn_bfs2.pack(pady=4)
+        self.btn_bfs_toggle = tk.Button(self.bfs_container, text="🔍 BFS Search  ▸", bg="#e3f2fd", command=lambda: self.toggle_group("bfs"), **btn_toggle_config)
+        self.btn_bfs_toggle.pack(fill=tk.X)
         
-        self.btn_dfs1 = tk.Button(left_frame, text="DFS Tiếp cận 1\n(Late Test)", bg="#fce4ec", command=lambda: self.run_algo(dfs1.solve, "DFS Tiếp cận 1"), **btn_config)
-        self.btn_dfs1.pack(pady=4)
+        self.bfs_sub_frame = tk.Frame(self.bfs_container, bg="#ffffff")
         
-        self.btn_dfs2 = tk.Button(left_frame, text="DFS Tiếp cận 2\n(Early Test)", bg="#fce4ec", command=lambda: self.run_algo(dfs2.solve, "DFS Tiếp cận 2"), **btn_config)
-        self.btn_dfs2.pack(pady=4)
+        self.btn_bfs1 = tk.Button(self.bfs_sub_frame, text="Tiếp cận 1 (Late)", bg="#f0f7ff", command=lambda: self.run_algo(bfs1.solve, "BFS Tiếp cận 1"), **btn_sub_config)
+        self.btn_bfs1.pack(fill=tk.X, pady=2, padx=10)
         
-        self.btn_ids1 = tk.Button(left_frame, text="IDS Tiếp cận 1\n(Late Test)", bg="#e8f5e9", command=lambda: self.run_algo(ids1.solve, "IDS Tiếp cận 1"), **btn_config)
-        self.btn_ids1.pack(pady=4)
+        self.btn_bfs2 = tk.Button(self.bfs_sub_frame, text="Tiếp cận 2 (Early)", bg="#f0f7ff", command=lambda: self.run_algo(bfs2.solve, "BFS Tiếp cận 2"), **btn_sub_config)
+        self.btn_bfs2.pack(fill=tk.X, pady=2, padx=10)
         
-        self.btn_ids2 = tk.Button(left_frame, text="IDS Tiếp cận 2\n(Early Test)", bg="#e8f5e9", command=lambda: self.run_algo(ids2.solve, "IDS Tiếp cận 2"), **btn_config)
-        self.btn_ids2.pack(pady=4)
+        # --- 2. Nhóm DFS ---
+        self.dfs_container = tk.Frame(left_frame, bg="#ffffff")
+        self.dfs_container.pack(fill=tk.X, pady=3)
         
-        self.btn_ucs = tk.Button(left_frame, text="UCS\n(Uniform Cost Search)", bg="#fff3e0", command=lambda: self.run_algo(ucs.solve, "UCS"), **btn_config)
-        self.btn_ucs.pack(pady=4)
+        self.btn_dfs_toggle = tk.Button(self.dfs_container, text="🌸 DFS Search  ▸", bg="#fce4ec", command=lambda: self.toggle_group("dfs"), **btn_toggle_config)
+        self.btn_dfs_toggle.pack(fill=tk.X)
         
-        self.btn_greedy = tk.Button(left_frame, text="Greedy Best-First", bg="#dcedc8", command=lambda: self.run_algo(greedy.solve, "Greedy Best-First"), **btn_config)
-        self.btn_greedy.pack(pady=4)
+        self.dfs_sub_frame = tk.Frame(self.dfs_container, bg="#ffffff")
         
-        self.btn_astar = tk.Button(left_frame, text="A* Search", bg="#d1c4e9", command=lambda: self.run_algo(Astar.solve, "A* Search"), **btn_config)
-        self.btn_astar.pack(pady=4)
+        self.btn_dfs1 = tk.Button(self.dfs_sub_frame, text="Tiếp cận 1 (Late)", bg="#fff0f5", command=lambda: self.run_algo(dfs1.solve, "DFS Tiếp cận 1"), **btn_sub_config)
+        self.btn_dfs1.pack(fill=tk.X, pady=2, padx=10)
+        
+        self.btn_dfs2 = tk.Button(self.dfs_sub_frame, text="Tiếp cận 2 (Early)", bg="#fff0f5", command=lambda: self.run_algo(dfs2.solve, "DFS Tiếp cận 2"), **btn_sub_config)
+        self.btn_dfs2.pack(fill=tk.X, pady=2, padx=10)
+        
+        # --- 3. Nhóm IDS ---
+        self.ids_container = tk.Frame(left_frame, bg="#ffffff")
+        self.ids_container.pack(fill=tk.X, pady=3)
+        
+        self.btn_ids_toggle = tk.Button(self.ids_container, text="🌱 IDS Search  ▸", bg="#e8f5e9", command=lambda: self.toggle_group("ids"), **btn_toggle_config)
+        self.btn_ids_toggle.pack(fill=tk.X)
+        
+        self.ids_sub_frame = tk.Frame(self.ids_container, bg="#ffffff")
+        
+        self.btn_ids1 = tk.Button(self.ids_sub_frame, text="Tiếp cận 1 (Late)", bg="#f1fcf2", command=lambda: self.run_algo(ids1.solve, "IDS Tiếp cận 1"), **btn_sub_config)
+        self.btn_ids1.pack(fill=tk.X, pady=2, padx=10)
+        
+        self.btn_ids2 = tk.Button(self.ids_sub_frame, text="Tiếp cận 2 (Early)", bg="#f1fcf2", command=lambda: self.run_algo(ids2.solve, "IDS Tiếp cận 2"), **btn_sub_config)
+        self.btn_ids2.pack(fill=tk.X, pady=2, padx=10)
+        
+        # --- 4. Nhóm Leo Núi (Hill Climbing) ---
+        self.hill_container = tk.Frame(left_frame, bg="#ffffff")
+        self.hill_container.pack(fill=tk.X, pady=3)
+        
+        self.btn_hill_toggle = tk.Button(self.hill_container, text="⛰️ Leo Núi Search  ▸", bg="#fff3e0", command=lambda: self.toggle_group("hill"), **btn_toggle_config)
+        self.btn_hill_toggle.pack(fill=tk.X)
+        
+        self.hill_sub_frame = tk.Frame(self.hill_container, bg="#ffffff")
+        
+        self.btn_hill_simple = tk.Button(self.hill_sub_frame, text="Leo núi Đơn giản", bg="#fffdf0", command=lambda: self.run_algo(hill_climbing.solve_simple, "Leo núi Đơn giản"), **btn_sub_config)
+        self.btn_hill_simple.pack(fill=tk.X, pady=2, padx=10)
+        
+        self.btn_hill_steepest = tk.Button(self.hill_sub_frame, text="Leo núi Dốc nhất", bg="#fffdf0", command=lambda: self.run_algo(hill_climbing.solve_steepest, "Leo núi Dốc nhất"), **btn_sub_config)
+        self.btn_hill_steepest.pack(fill=tk.X, pady=2, padx=10)
+        
+        self.btn_hill_stochastic = tk.Button(self.hill_sub_frame, text="Leo núi Ngẫu nhiên", bg="#fffdf0", command=lambda: self.run_algo(hill_climbing.solve_stochastic, "Leo núi Ngẫu nhiên"), **btn_sub_config)
+        self.btn_hill_stochastic.pack(fill=tk.X, pady=2, padx=10)
+        
+        # --- 5. Nhóm Heuristic / Khác ---
+        self.others_container = tk.Frame(left_frame, bg="#ffffff")
+        self.others_container.pack(fill=tk.X, pady=3)
+        
+        self.btn_others_toggle = tk.Button(self.others_container, text="⚡ Heuristic / Khác  ▸", bg="#f3e5f5", command=lambda: self.toggle_group("others"), **btn_toggle_config)
+        self.btn_others_toggle.pack(fill=tk.X)
+        
+        self.others_sub_frame = tk.Frame(self.others_container, bg="#ffffff")
+        
+        self.btn_ucs = tk.Button(self.others_sub_frame, text="UCS Search", bg="#faf5ff", command=lambda: self.run_algo(ucs.solve, "UCS"), **btn_sub_config)
+        self.btn_ucs.pack(fill=tk.X, pady=2, padx=10)
+        
+        self.btn_greedy = tk.Button(self.others_sub_frame, text="Greedy Best-First", bg="#faf5ff", command=lambda: self.run_algo(greedy.solve, "Greedy Best-First"), **btn_sub_config)
+        self.btn_greedy.pack(fill=tk.X, pady=2, padx=10)
+        
+        self.btn_astar = tk.Button(self.others_sub_frame, text="A* Search", bg="#faf5ff", command=lambda: self.run_algo(Astar.solve, "A* Search"), **btn_sub_config)
+        self.btn_astar.pack(fill=tk.X, pady=2, padx=10)
+        
+        self.btn_idastar = tk.Button(self.others_sub_frame, text="IDA* Search", bg="#faf5ff", command=lambda: self.run_algo(idastar.solve, "IDA* Search"), **btn_sub_config)
+        self.btn_idastar.pack(fill=tk.X, pady=2, padx=10)
         
         tk.Frame(left_frame, height=2, bg="#cccccc").pack(fill=tk.X, pady=10, padx=10)
         
@@ -111,16 +179,77 @@ class VacuumVisualizer:
         self.matrix_console = scrolledtext.ScrolledText(center_frame, width=45, height=10, font=("Consolas", 16, "bold"), bg="#282c34", fg="#98c379")
         self.matrix_console.pack(pady=5)
         
+    def toggle_group(self, name):
+        if name == "bfs":
+            if self.group_states["bfs"]:
+                self.bfs_sub_frame.pack_forget()
+                self.btn_bfs_toggle.config(text="🔍 BFS Search  ▸")
+                self.group_states["bfs"] = False
+            else:
+                self.bfs_sub_frame.pack(fill=tk.X, pady=2)
+                self.btn_bfs_toggle.config(text="🔍 BFS Search  ▾")
+                self.group_states["bfs"] = True
+        elif name == "dfs":
+            if self.group_states["dfs"]:
+                self.dfs_sub_frame.pack_forget()
+                self.btn_dfs_toggle.config(text="🌸 DFS Search  ▸")
+                self.group_states["dfs"] = False
+            else:
+                self.dfs_sub_frame.pack(fill=tk.X, pady=2)
+                self.btn_dfs_toggle.config(text="🌸 DFS Search  ▾")
+                self.group_states["dfs"] = True
+        elif name == "ids":
+            if self.group_states["ids"]:
+                self.ids_sub_frame.pack_forget()
+                self.btn_ids_toggle.config(text="🌱 IDS Search  ▸")
+                self.group_states["ids"] = False
+            else:
+                self.ids_sub_frame.pack(fill=tk.X, pady=2)
+                self.btn_ids_toggle.config(text="🌱 IDS Search  ▾")
+                self.group_states["ids"] = True
+        elif name == "hill":
+            if self.group_states["hill"]:
+                self.hill_sub_frame.pack_forget()
+                self.btn_hill_toggle.config(text="⛰️ Leo Núi Search  ▸")
+                self.group_states["hill"] = False
+            else:
+                self.hill_sub_frame.pack(fill=tk.X, pady=2)
+                self.btn_hill_toggle.config(text="⛰️ Leo Núi Search  ▾")
+                self.group_states["hill"] = True
+        elif name == "others":
+            if self.group_states["others"]:
+                self.others_sub_frame.pack_forget()
+                self.btn_others_toggle.config(text="⚡ Heuristic / Khác  ▸")
+                self.group_states["others"] = False
+            else:
+                self.others_sub_frame.pack(fill=tk.X, pady=2)
+                self.btn_others_toggle.config(text="⚡ Heuristic / Khác  ▾")
+                self.group_states["others"] = True
+
     def set_buttons_state(self, state):
+        self.btn_bfs_toggle.config(state=state)
         self.btn_bfs1.config(state=state)
         self.btn_bfs2.config(state=state)
+        
+        self.btn_dfs_toggle.config(state=state)
         self.btn_dfs1.config(state=state)
         self.btn_dfs2.config(state=state)
+        
+        self.btn_ids_toggle.config(state=state)
         self.btn_ids1.config(state=state)
         self.btn_ids2.config(state=state)
+        
+        self.btn_hill_toggle.config(state=state)
+        self.btn_hill_simple.config(state=state)
+        self.btn_hill_steepest.config(state=state)
+        self.btn_hill_stochastic.config(state=state)
+        
+        self.btn_others_toggle.config(state=state)
         self.btn_ucs.config(state=state)
         self.btn_greedy.config(state=state)
         self.btn_astar.config(state=state)
+        self.btn_idastar.config(state=state)
+        
         self.btn_reset.config(state=state)
         self.speed_scale.config(state=state)
         
@@ -209,22 +338,39 @@ class VacuumVisualizer:
         self.lbl_time.config(text=f"Thời gian chạy: {exec_time:.5f}s")
         
         if not goal_node:
-            self.log(" Không tìm thấy đường đi!")
+            self.log("❌ Không tìm thấy đường đi!")
             self.lbl_path_cost.config(text="Số bước đi (Cost): Không có")
             self.is_running = False
             self.set_buttons_state(tk.NORMAL)
             return
             
         frames = self.get_path_frames(goal_node)
-        self.log(f"Tìm thấy Goal! Lộ trình: {len(frames)-1} bước.")
-        self.lbl_path_cost.config(text=f"Số bước đi (Cost): {len(frames)-1}")
         
+        # Kiểm tra xem có thực sự sạch hết bụi hay không (Goal thực sự)
+        final_dirts = goal_node.state[1]
+        is_goal_reached = len(final_dirts) == 0
+        
+        if is_goal_reached:
+            self.log(f"🎉 Đã tìm thấy đường đi! Lộ trình: {len(frames)-1} bước.")
+            self.lbl_path_cost.config(text=f"Số bước đi (Cost): {len(frames)-1}")
+        else:
+            self.log(f"⚠️ THUẬT TOÁN BỊ KẸT / DỪNG LẠI! Đã đi được: {len(frames)-1} bước.")
+            self.log(f"   Còn lại {len(final_dirts)} ô bụi chưa quét.")
+            if "leo núi" in algo_name.lower():
+                self.log("   👉 Lý do: Đã rơi vào Cực tiểu địa phương (Local Minimum) hoặc Cao nguyên, không có hướng đi nào làm sạch thêm bụi.")
+            self.lbl_path_cost.config(text=f"{len(frames)-1} bước (Bị kẹt!)")
+            
         # Bắt đầu hiệu ứng trượt mượt mà
-        self.animate_frames(frames, 0)
+        self.animate_frames(frames, 0, is_goal_reached)
         
-    def animate_frames(self, frames, index):
+    def animate_frames(self, frames, index, is_goal_reached=True):
         if index >= len(frames):
-            self.log("\n HOÀN THÀNH LỘ TRÌNH!")
+            if is_goal_reached:
+                self.log("\n✨ HOÀN THÀNH LỘ TRÌNH (SẠCH BỤI)!")
+                messagebox.showinfo("Thành công", "Đã quét sạch toàn bộ bụi!")
+            else:
+                self.log("\n⚠️ THUẬT TOÁN ĐÃ DỪNG (BỊ KẸT / CỰC TIỂU ĐỊA PHƯƠNG)!")
+                messagebox.showwarning("Cảnh báo", f"Thuật toán bị kẹt hoặc đã dừng!\nCòn lại {len(self.current_dirts)} ô bụi chưa được quét.")
             self.is_running = False
             self.set_buttons_state(tk.NORMAL)
             self.draw_grid() # Cleanup
@@ -235,15 +381,15 @@ class VacuumVisualizer:
         self.current_dirts = set(frame["dirts"])
         
         self.draw_background()
-        self.smooth_move(self.current_pos, next_pos, frame, frames, index)
+        self.smooth_move(self.current_pos, next_pos, frame, frames, index, is_goal_reached)
         
-    def smooth_move(self, start_pos, end_pos, frame, frames, index):
+    def smooth_move(self, start_pos, end_pos, frame, frames, index, is_goal_reached=True):
         if start_pos == end_pos:
             self.current_pos = end_pos
             self.update_matrix_console()
             self.log("➡️ " + frame["log"])
             speed = self.speed_scale.get()
-            self.root.after(speed, self.animate_frames, frames, index + 1)
+            self.root.after(speed, self.animate_frames, frames, index + 1, is_goal_reached)
             return
             
         sr, sc = start_pos
@@ -258,21 +404,21 @@ class VacuumVisualizer:
         dc = (ec - sc) / steps
         
         self.log("➡️ " + frame["log"])
-        self.perform_step(sr, sc, dr, dc, 0, steps, end_pos, frames, index)
+        self.perform_step(sr, sc, dr, dc, 0, steps, end_pos, frames, index, is_goal_reached)
         
-    def perform_step(self, r, c, dr, dc, step_idx, total_steps, end_pos, frames, index):
+    def perform_step(self, r, c, dr, dc, step_idx, total_steps, end_pos, frames, index, is_goal_reached=True):
         if step_idx < total_steps:
             r += dr
             c += dc
             self.draw_robot(r, c)
             speed = self.speed_scale.get()
             delay = max(1, speed // total_steps)
-            self.root.after(delay, self.perform_step, r, c, dr, dc, step_idx + 1, total_steps, end_pos, frames, index)
+            self.root.after(delay, self.perform_step, r, c, dr, dc, step_idx + 1, total_steps, end_pos, frames, index, is_goal_reached)
         else:
             self.current_pos = end_pos
             self.draw_robot(end_pos[0], end_pos[1])
             self.update_matrix_console()
-            self.root.after(10, self.animate_frames, frames, index + 1)
+            self.root.after(10, self.animate_frames, frames, index + 1, is_goal_reached)
 
     def draw_grid(self):
         self.canvas.delete("all")
