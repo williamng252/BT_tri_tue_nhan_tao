@@ -31,7 +31,7 @@ class HillClimbingSearcher:
             # Nếu xét hết con mà không có thằng nào tốt hơn -> Kẹt ở Đỉnh giả
             if not found_better:
                 print("Simple Hill Climbing: Bị kẹt tại Local Minimum!")
-                return backtrack(current_node) # Trả về đường đi đến chỗ bị kẹt
+                return backtrack(current_node)
                 
         return backtrack(current_node)
 
@@ -47,21 +47,15 @@ class HillClimbingSearcher:
             if not neighbors:
                 break
                 
-            # Tính h cho tất cả các con
             scored_neighbors = [(self.count_dirts(c.state), c) for c in neighbors]
-            # Tìm điểm h nhỏ nhất (tốt nhất)
             best_h = min(score for score, _ in scored_neighbors)
-            
-            # Lọc ra tất cả các con đạt được điểm best_h này (có thể có nhiều con cùng điểm)
             best_children = [c for score, c in scored_neighbors if score == best_h]
             
             if best_h < current_h:
-                # Tìm thấy chỗ dốc hơn -> Random 1 thằng trong đám tốt nhất và đi tiếp
                 current_node = random.choice(best_children)
-                sideways_count = 0 # Reset đếm đi ngang
+                sideways_count = 0 
                 
             elif best_h == current_h:
-                # Cao nguyên (Plateau) -> Bằng nhau lấy random chạy tiếp
                 if sideways_count < self.max_sideways_moves:
                     current_node = random.choice(best_children)
                     sideways_count += 1
@@ -69,7 +63,6 @@ class HillClimbingSearcher:
                     print(f"Steepest Ascent: Đã đi ngang {self.max_sideways_moves} bước. Dừng để tránh lặp vô hạn!")
                     break
             else:
-                # Mọi hướng đều tệ hơn -> Kẹt Đỉnh giả
                 print("Steepest Ascent: Bị kẹt tại Local Minimum!")
                 break
                 
@@ -84,7 +77,6 @@ class HillClimbingSearcher:
             current_h = self.count_dirts(current_node.state)
             neighbors = get_children(current_node)
             
-            # Lọc ra danh sách những đứa đạt yêu cầu (h <= hiện tại)
             acceptable_neighbors = []
             for child in neighbors:
                 if self.count_dirts(child.state) <= current_h:
@@ -94,7 +86,6 @@ class HillClimbingSearcher:
                 print("Stochastic Hill Climbing: Bị kẹt tại Local Minimum!")
                 break
                 
-            # Random nhắm mắt bốc đại 1 con trong danh sách hợp lệ
             next_node = random.choice(acceptable_neighbors)
             next_h = self.count_dirts(next_node.state)
             
@@ -104,30 +95,48 @@ class HillClimbingSearcher:
                     print("Stochastic Hill Climbing: Bị kẹt vòng lặp đi ngang!")
                     break
             else:
-                sideways_count = 0 # Đi được xuống dốc thì reset đếm ngang
+                sideways_count = 0 
                 
             current_node = next_node
             
         return backtrack(current_node)
 
-def _solve_helper(initial_dirts, run_func):
-    import time
-    start_t = time.time()
-    grid = []
-    for r in range(4):
-        row = []
-        for c in range(4):
-            if (r, c) in initial_dirts:
-                row.append(1)
+    def run_random_restart(self, start_state, max_restart=10):
+        """4. Random Restart Hill Climbing (Leo đồi khởi tạo ngẫu nhiên)"""
+        for i in range(max_restart):
+            # Lần đầu tiên thử chạy với trạng thái gốc của user
+            if i == 0:
+                current_node = Node(start_state, None, None, 0)
             else:
-                row.append(0)
-        grid.append(tuple(row))
-    start_state = (0, 0, tuple(grid))
-    
-    searcher = HillClimbingSearcher()
-    frames_raw = run_func(searcher, start_state)
-    exec_time = time.time() - start_t
-    
+                # Sinh trạng thái ngẫu nhiên (Robot rơi xuống 1 ô bất kỳ, map rác tạo ngẫu nhiên)
+                r, c = random.randint(0, 3), random.randint(0, 3)
+                random_grid = tuple(tuple(random.choice([0, 1]) for _ in range(4)) for _ in range(4))
+                current_node = Node((r, c, random_grid), None, None, 0)
+
+            while True:
+                if is_goal(current_node.state):
+                    return backtrack(current_node)
+
+                current_h = self.count_dirts(current_node.state)
+                neighbors = get_children(current_node)
+
+                # Lọc ra tập Better_Neighbors (Tốt hơn hẳn trạng thái hiện tại)
+                better_neighbors = [child for child in neighbors if self.count_dirts(child.state) < current_h]
+
+                if not better_neighbors:
+                    print(f"Lượt {i+1}: Kẹt tại Đỉnh giả cục bộ! Kích hoạt Random Restart...")
+                    break  # Thoát vòng lặp WHILE, nhảy sang lượt i tiếp theo của vòng FOR
+                else:
+                    # Next_State = Chọn trạng thái tốt nhất từ Better_Neighbors
+                    best_child = min(better_neighbors, key=lambda c: self.count_dirts(c.state))
+                    current_node = best_child
+
+        print("Random_Restart_Hill_Climbing: Thất bại! Đã chạy hết MAX_RESTART lượt.")
+        return []
+
+import time
+
+def solve_helper(frames_raw, exec_time):
     if not frames_raw:
         return None, "N/A", exec_time
         
@@ -158,10 +167,73 @@ def _solve_helper(initial_dirts, run_func):
     return parent, "N/A", exec_time
 
 def solve_simple(initial_dirts):
-    return _solve_helper(initial_dirts, lambda s, state: s.run_simple(state))
+    start_t = time.time()
+    grid = []
+    for r in range(4):
+        row = []
+        for c in range(4):
+            if (r, c) in initial_dirts:
+                row.append(1)
+            else:
+                row.append(0)
+        grid.append(tuple(row))
+    start_state = (0, 0, tuple(grid))
+    
+    searcher = HillClimbingSearcher()
+    frames_raw = searcher.run_simple(start_state)
+    exec_time = time.time() - start_t
+    return solve_helper(frames_raw, exec_time)
 
 def solve_steepest(initial_dirts):
-    return _solve_helper(initial_dirts, lambda s, state: s.run_steepest(state))
+    start_t = time.time()
+    grid = []
+    for r in range(4):
+        row = []
+        for c in range(4):
+            if (r, c) in initial_dirts:
+                row.append(1)
+            else:
+                row.append(0)
+        grid.append(tuple(row))
+    start_state = (0, 0, tuple(grid))
+    
+    searcher = HillClimbingSearcher()
+    frames_raw = searcher.run_steepest(start_state)
+    exec_time = time.time() - start_t
+    return solve_helper(frames_raw, exec_time)
 
 def solve_stochastic(initial_dirts):
-    return _solve_helper(initial_dirts, lambda s, state: s.run_stochastic(state))
+    start_t = time.time()
+    grid = []
+    for r in range(4):
+        row = []
+        for c in range(4):
+            if (r, c) in initial_dirts:
+                row.append(1)
+            else:
+                row.append(0)
+        grid.append(tuple(row))
+    start_state = (0, 0, tuple(grid))
+    
+    searcher = HillClimbingSearcher()
+    frames_raw = searcher.run_stochastic(start_state)
+    exec_time = time.time() - start_t
+    return solve_helper(frames_raw, exec_time)
+
+def solve_random_restart(initial_dirts):
+    start_t = time.time()
+    grid = []
+    for r in range(4):
+        row = []
+        for c in range(4):
+            if (r, c) in initial_dirts:
+                row.append(1)
+            else:
+                row.append(0)
+        grid.append(tuple(row))
+    start_state = (0, 0, tuple(grid))
+    
+    searcher = HillClimbingSearcher()
+    frames_raw = searcher.run_random_restart(start_state)
+    exec_time = time.time() - start_t
+    return solve_helper(frames_raw, exec_time)

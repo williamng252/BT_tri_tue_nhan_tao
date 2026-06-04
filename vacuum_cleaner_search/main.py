@@ -11,6 +11,7 @@ import greedy
 import Astar
 import idastar
 import hill_climbing
+import local_beam_search
 
 class VacuumVisualizer:
     def __init__(self, root):
@@ -105,6 +106,9 @@ class VacuumVisualizer:
         self.btn_hill_stochastic = tk.Button(self.hill_sub_frame, text="Leo núi Ngẫu nhiên", bg="#fffdf0", command=lambda: self.run_algo(hill_climbing.solve_stochastic, "Leo núi Ngẫu nhiên"), **btn_sub_config)
         self.btn_hill_stochastic.pack(fill=tk.X, pady=2, padx=10)
         
+        self.btn_hill_random_restart = tk.Button(self.hill_sub_frame, text="Leo núi Khởi tạo ngẫu nhiên", bg="#fffdf0", command=lambda: self.run_algo(hill_climbing.solve_random_restart, "Leo núi Khởi tạo ngẫu nhiên"), **btn_sub_config)
+        self.btn_hill_random_restart.pack(fill=tk.X, pady=2, padx=10)
+        
         # --- 5. Nhóm Heuristic / Khác ---
         self.others_container = tk.Frame(left_frame, bg="#ffffff")
         self.others_container.pack(fill=tk.X, pady=3)
@@ -125,6 +129,9 @@ class VacuumVisualizer:
         
         self.btn_idastar = tk.Button(self.others_sub_frame, text="IDA* Search", bg="#faf5ff", command=lambda: self.run_algo(idastar.solve, "IDA* Search"), **btn_sub_config)
         self.btn_idastar.pack(fill=tk.X, pady=2, padx=10)
+        
+        self.btn_local_beam = tk.Button(self.others_sub_frame, text="Local Beam Search", bg="#faf5ff", command=lambda: self.run_algo(local_beam_search.solve, "Local Beam Search"), **btn_sub_config)
+        self.btn_local_beam.pack(fill=tk.X, pady=2, padx=10)
         
         tk.Frame(left_frame, height=2, bg="#cccccc").pack(fill=tk.X, pady=10, padx=10)
         
@@ -243,12 +250,14 @@ class VacuumVisualizer:
         self.btn_hill_simple.config(state=state)
         self.btn_hill_steepest.config(state=state)
         self.btn_hill_stochastic.config(state=state)
+        self.btn_hill_random_restart.config(state=state)
         
         self.btn_others_toggle.config(state=state)
         self.btn_ucs.config(state=state)
         self.btn_greedy.config(state=state)
         self.btn_astar.config(state=state)
         self.btn_idastar.config(state=state)
+        self.btn_local_beam.config(state=state)
         
         self.btn_reset.config(state=state)
         self.speed_scale.config(state=state)
