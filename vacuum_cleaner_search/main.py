@@ -12,6 +12,7 @@ import Astar
 import idastar
 import hill_climbing
 import local_beam_search
+import simulated_annealing_vacuum
 
 class VacuumVisualizer:
     def __init__(self, root):
@@ -132,6 +133,9 @@ class VacuumVisualizer:
         
         self.btn_local_beam = tk.Button(self.others_sub_frame, text="Local Beam Search", bg="#faf5ff", command=lambda: self.run_algo(local_beam_search.solve, "Local Beam Search"), **btn_sub_config)
         self.btn_local_beam.pack(fill=tk.X, pady=2, padx=10)
+        
+        self.btn_simulated_annealing = tk.Button(self.others_sub_frame, text="Simulated Annealing", bg="#faf5ff", command=lambda: self.run_algo(simulated_annealing_vacuum.solve, "Simulated Annealing"), **btn_sub_config)
+        self.btn_simulated_annealing.pack(fill=tk.X, pady=2, padx=10)
         
         tk.Frame(left_frame, height=2, bg="#cccccc").pack(fill=tk.X, pady=10, padx=10)
         
@@ -258,6 +262,7 @@ class VacuumVisualizer:
         self.btn_astar.config(state=state)
         self.btn_idastar.config(state=state)
         self.btn_local_beam.config(state=state)
+        self.btn_simulated_annealing.config(state=state)
         
         self.btn_reset.config(state=state)
         self.speed_scale.config(state=state)
@@ -367,6 +372,8 @@ class VacuumVisualizer:
             self.log(f"   Còn lại {len(final_dirts)} ô bụi chưa quét.")
             if "leo núi" in algo_name.lower():
                 self.log("   👉 Lý do: Đã rơi vào Cực tiểu địa phương (Local Minimum) hoặc Cao nguyên, không có hướng đi nào làm sạch thêm bụi.")
+            elif "annealing" in algo_name.lower():
+                self.log("   👉 Lý do: Nhiệt độ giảm xuống dưới Tmin (hệ thống đã nguội lạnh) hoặc bị kẹt không có đường đi.")
             self.lbl_path_cost.config(text=f"{len(frames)-1} bước (Bị kẹt!)")
             
         # Bắt đầu hiệu ứng trượt mượt mà
