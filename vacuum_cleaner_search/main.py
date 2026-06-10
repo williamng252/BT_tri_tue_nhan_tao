@@ -13,6 +13,7 @@ import idastar
 import hill_climbing
 import local_beam_search
 import simulated_annealing_vacuum
+import belief_state_vacuum
 
 class VacuumVisualizer:
     def __init__(self, root):
@@ -27,7 +28,8 @@ class VacuumVisualizer:
             "dfs": False,
             "ids": False,
             "hill": False,
-            "others": False
+            "others": False,
+            "belief": False
         }
         
         self.create_widgets()
@@ -137,6 +139,27 @@ class VacuumVisualizer:
         self.btn_simulated_annealing = tk.Button(self.others_sub_frame, text="Simulated Annealing", bg="#faf5ff", command=lambda: self.run_algo(simulated_annealing_vacuum.solve, "Simulated Annealing"), **btn_sub_config)
         self.btn_simulated_annealing.pack(fill=tk.X, pady=2, padx=10)
         
+        # --- 6. Nhóm Trạng Thái Niềm Tin (Belief State) ---
+        self.belief_container = tk.Frame(left_frame, bg="#ffffff")
+        self.belief_container.pack(fill=tk.X, pady=3)
+        
+        self.btn_belief_toggle = tk.Button(self.belief_container, text="🔮 Belief State  ▸", bg="#ede7f6", command=lambda: self.toggle_group("belief"), **btn_toggle_config)
+        self.btn_belief_toggle.pack(fill=tk.X)
+        
+        self.belief_sub_frame = tk.Frame(self.belief_container, bg="#ffffff")
+        
+        self.btn_belief_multi_bfs = tk.Button(self.belief_sub_frame, text="Đa trạng thái (BFS)", bg="#f3e5f5", command=lambda: self.run_algo(belief_state_vacuum.solve_multi_bfs, "Đa trạng thái (BFS)"), **btn_sub_config)
+        self.btn_belief_multi_bfs.pack(fill=tk.X, pady=2, padx=10)
+        
+        self.btn_belief_multi_astar = tk.Button(self.belief_sub_frame, text="Đa trạng thái (A*)", bg="#f3e5f5", command=lambda: self.run_algo(belief_state_vacuum.solve_multi_astar, "Đa trạng thái (A*)"), **btn_sub_config)
+        self.btn_belief_multi_astar.pack(fill=tk.X, pady=2, padx=10)
+        
+        self.btn_belief_bfs = tk.Button(self.belief_sub_frame, text="Belief State (BFS)", bg="#f3e5f5", command=lambda: self.run_algo(belief_state_vacuum.solve_belief_bfs, "Belief State (BFS)"), **btn_sub_config)
+        self.btn_belief_bfs.pack(fill=tk.X, pady=2, padx=10)
+        
+        self.btn_belief_astar = tk.Button(self.belief_sub_frame, text="Belief State (A*)", bg="#f3e5f5", command=lambda: self.run_algo(belief_state_vacuum.solve_belief_astar, "Belief State (A*)"), **btn_sub_config)
+        self.btn_belief_astar.pack(fill=tk.X, pady=2, padx=10)
+        
         tk.Frame(left_frame, height=2, bg="#cccccc").pack(fill=tk.X, pady=10, padx=10)
         
         tk.Label(left_frame, text="TỐC ĐỘ (ms/bước)", font=("Segoe UI", 10, "bold"), bg="#ffffff").pack(pady=(5, 0))
@@ -236,6 +259,15 @@ class VacuumVisualizer:
                 self.others_sub_frame.pack(fill=tk.X, pady=2)
                 self.btn_others_toggle.config(text="⚡ Heuristic / Khác  ▾")
                 self.group_states["others"] = True
+        elif name == "belief":
+            if self.group_states["belief"]:
+                self.belief_sub_frame.pack_forget()
+                self.btn_belief_toggle.config(text="🔮 Belief State  ▸")
+                self.group_states["belief"] = False
+            else:
+                self.belief_sub_frame.pack(fill=tk.X, pady=2)
+                self.btn_belief_toggle.config(text="🔮 Belief State  ▾")
+                self.group_states["belief"] = True
 
     def set_buttons_state(self, state):
         self.btn_bfs_toggle.config(state=state)
@@ -263,6 +295,12 @@ class VacuumVisualizer:
         self.btn_idastar.config(state=state)
         self.btn_local_beam.config(state=state)
         self.btn_simulated_annealing.config(state=state)
+        
+        self.btn_belief_toggle.config(state=state)
+        self.btn_belief_multi_bfs.config(state=state)
+        self.btn_belief_multi_astar.config(state=state)
+        self.btn_belief_bfs.config(state=state)
+        self.btn_belief_astar.config(state=state)
         
         self.btn_reset.config(state=state)
         self.speed_scale.config(state=state)
@@ -318,11 +356,19 @@ class VacuumVisualizer:
             dirts = node.state[1]
             action = node.action
             
+            is_multi = isinstance(pos, (set, frozenset, list, tuple)) and len(pos) > 0 and isinstance(next(iter(pos)), (list, tuple))
+            
             if action:
                 action_text = {"R": "RIGHT", "D": "DOWN", "L": "LEFT", "U": "UP"}.get(action, action)
-                msg = f"Máy đang di chuyển {action_text} đến vị trí {list(pos)}"
+                if is_multi:
+                    msg = f"Máy đang di chuyển {action_text}. Số vị trí khả thi: {len(pos)} {sorted(list(pos))}"
+                else:
+                    msg = f"Máy đang di chuyển {action_text} đến vị trí {list(pos)}"
             else:
-                msg = f"Bắt đầu tại vị trí {list(pos)}"
+                if is_multi:
+                    msg = f"Bắt đầu với các vị trí khả thi: {sorted(list(pos))}"
+                else:
+                    msg = f"Bắt đầu tại vị trí {list(pos)}"
                 
             frames.append({
                 "robot_pos": pos,
@@ -400,6 +446,18 @@ class VacuumVisualizer:
         self.smooth_move(self.current_pos, next_pos, frame, frames, index, is_goal_reached)
         
     def smooth_move(self, start_pos, end_pos, frame, frames, index, is_goal_reached=True):
+        is_multi_start = isinstance(start_pos, (set, frozenset, list, tuple)) and len(start_pos) > 0 and isinstance(next(iter(start_pos)), (list, tuple))
+        is_multi_end = isinstance(end_pos, (set, frozenset, list, tuple)) and len(end_pos) > 0 and isinstance(next(iter(end_pos)), (list, tuple))
+        
+        if is_multi_start or is_multi_end:
+            self.current_pos = end_pos
+            self.draw_grid()
+            self.update_matrix_console()
+            self.log("➡️ " + frame["log"])
+            speed = self.speed_scale.get()
+            self.root.after(speed, self.animate_frames, frames, index + 1, is_goal_reached)
+            return
+            
         if start_pos == end_pos:
             self.current_pos = end_pos
             self.update_matrix_console()
@@ -439,7 +497,7 @@ class VacuumVisualizer:
     def draw_grid(self):
         self.canvas.delete("all")
         self.draw_background()
-        self.draw_robot(self.current_pos[0], self.current_pos[1])
+        self.draw_robot(self.current_pos)
         
     def draw_background(self):
         self.canvas.delete("bg")
@@ -467,29 +525,45 @@ class VacuumVisualizer:
         self.canvas.tag_lower("dirt")
         self.canvas.tag_lower("bg")
         
-    def draw_robot(self, r, c):
+    def draw_robot(self, r, c=None):
         self.canvas.delete("robot")
+        if isinstance(r, (set, frozenset, list, tuple)) and len(r) > 0 and isinstance(next(iter(r)), (list, tuple)):
+            for pos in r:
+                curr_r, curr_c = pos
+                self.draw_single_robot(curr_r, curr_c, is_belief=True)
+        else:
+            if c is None:
+                curr_r, curr_c = r
+            else:
+                curr_r, curr_c = r, c
+            self.draw_single_robot(curr_r, curr_c, is_belief=False)
+
+    def draw_single_robot(self, r, c, is_belief=False):
         x0 = c * self.cell_size
         y0 = r * self.cell_size
         x1 = x0 + self.cell_size
         y1 = y0 + self.cell_size
         
-        # Modern Roomba Design
-        # Outer shell
-        self.canvas.create_oval(x0 + 15, y0 + 15, x1 - 15, y1 - 15, fill="#2c3e50", outline="#1a252f", width=2, tags="robot")
-        # Inner circle
-        self.canvas.create_oval(x0 + 25, y0 + 25, x1 - 25, y1 - 25, fill="#34495e", outline="#3498db", width=2, tags="robot")
-        # LED indicator (green if active)
-        led_color = "#2ecc71" if self.is_running else "#e74c3c"
-        self.canvas.create_oval(x0 + 45, y0 + 45, x1 - 45, y1 - 45, fill=led_color, outline="#27ae60", tags="robot")
+        if is_belief:
+            self.canvas.create_oval(x0 + 15, y0 + 15, x1 - 15, y1 - 15, fill="#eceff1", outline="#90a4ae", width=1.5, dash=(4, 4), tags="robot")
+            self.canvas.create_oval(x0 + 25, y0 + 25, x1 - 25, y1 - 25, fill="#cfd8dc", outline="#90a4ae", width=1, tags="robot")
+            self.canvas.create_oval(x0 + 45, y0 + 45, x1 - 45, y1 - 45, fill="#90a4ae", outline="#78909c", tags="robot")
+        else:
+            self.canvas.create_oval(x0 + 15, y0 + 15, x1 - 15, y1 - 15, fill="#2c3e50", outline="#1a252f", width=2, tags="robot")
+            self.canvas.create_oval(x0 + 25, y0 + 25, x1 - 25, y1 - 25, fill="#34495e", outline="#3498db", width=2, tags="robot")
+            led_color = "#2ecc71" if self.is_running else "#e74c3c"
+            self.canvas.create_oval(x0 + 45, y0 + 45, x1 - 45, y1 - 45, fill=led_color, outline="#27ae60", tags="robot")
 
     def update_matrix_console(self):
         self.matrix_console.delete(1.0, tk.END)
         matrix_str = "\n"
+        is_multi = isinstance(self.current_pos, (set, frozenset, list, tuple)) and len(self.current_pos) > 0 and isinstance(next(iter(self.current_pos)), (list, tuple))
+        
         for r in range(4):
             row_chars = []
             for c in range(4):
-                if (r, c) == self.current_pos:
+                is_robot_here = (r, c) in self.current_pos if is_multi else (r, c) == self.current_pos
+                if is_robot_here:
                     row_chars.append("[ X ]")
                 elif (r, c) in self.current_dirts:
                     row_chars.append("[ 1 ]")
