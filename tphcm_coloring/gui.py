@@ -3,6 +3,8 @@ import tkinter as tk
 from tkinter import scrolledtext, ttk
 from backtracking import backtracking_search
 from forward_checking import forward_checking_search
+from ac3 import ac3_search
+from min_conflicts import min_conflicts_search
 
 # HCMC Data
 DISTRICTS = ['CC', 'HM', 'Q12', 'GV', 'BT', 'TD', 'PN', 'TB', 'TP', 'BTan', 'Q1', 'Q3', 'Q10', 'Q11', 'Q5', 'Q6', 'Q4', 'Q8', 'Q7', 'BC', 'NB', 'CG']
@@ -139,23 +141,36 @@ class MapColoringGUI:
         lbl_desc.pack(anchor=tk.W, pady=(0, 10))
 
         # Buttons frame
-        btn_frame = tk.Frame(control_frame, bg="#FFFFFF")
-        btn_frame.pack(fill=tk.X)
+        btn_frame1 = tk.Frame(control_frame, bg="#FFFFFF")
+        btn_frame1.pack(fill=tk.X, pady=(0, 5))
 
-        self.btn_backtracking = tk.Button(btn_frame, text="Backtracking", bg="#E67E22", fg="white", 
-                                          font=("Arial", 10, "bold"), relief=tk.FLAT, height=2,
+        self.btn_backtracking = tk.Button(btn_frame1, text="Backtracking", bg="#E67E22", fg="white", 
+                                          font=("Arial", 9, "bold"), relief=tk.FLAT, height=2,
                                           command=self.start_backtracking)
-        self.btn_backtracking.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(0, 5))
+        self.btn_backtracking.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(0, 3))
 
-        self.btn_forward = tk.Button(btn_frame, text="Forward Checking", bg="#3498DB", fg="white", 
-                                     font=("Arial", 10, "bold"), relief=tk.FLAT, height=2,
+        self.btn_forward = tk.Button(btn_frame1, text="Forward Checking", bg="#3498DB", fg="white", 
+                                     font=("Arial", 9, "bold"), relief=tk.FLAT, height=2,
                                      command=self.start_forward_checking)
-        self.btn_forward.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=5)
+        self.btn_forward.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=3)
 
-        self.btn_stop = tk.Button(btn_frame, text="Dừng / Reset", bg="#E74C3C", fg="white", 
-                                  font=("Arial", 10, "bold"), relief=tk.FLAT, height=2,
+        self.btn_ac3 = tk.Button(btn_frame1, text="AC-3 (MAC)", bg="#9B59B6", fg="white", 
+                                 font=("Arial", 9, "bold"), relief=tk.FLAT, height=2,
+                                 command=self.start_ac3)
+        self.btn_ac3.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(3, 0))
+
+        btn_frame2 = tk.Frame(control_frame, bg="#FFFFFF")
+        btn_frame2.pack(fill=tk.X)
+
+        self.btn_min_conflicts = tk.Button(btn_frame2, text="Min-Conflicts", bg="#1ABC9C", fg="white", 
+                                            font=("Arial", 9, "bold"), relief=tk.FLAT, height=2,
+                                            command=self.start_min_conflicts)
+        self.btn_min_conflicts.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(0, 3))
+
+        self.btn_stop = tk.Button(btn_frame2, text="Dừng / Reset", bg="#E74C3C", fg="white", 
+                                  font=("Arial", 9, "bold"), relief=tk.FLAT, height=2,
                                   command=self.stop_and_reset)
-        self.btn_stop.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(5, 0))
+        self.btn_stop.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(3, 0))
 
         # Speed slider
         speed_frame = tk.Frame(control_frame, bg="#FFFFFF", pady=5)
@@ -264,6 +279,18 @@ class MapColoringGUI:
         self.stop_and_reset()
         self.log("BẮT ĐẦU GIẢI BẰNG THUẬT TOÁN FORWARD CHECKING...", "step")
         self.current_generator = forward_checking_search(DISTRICTS, {v: list(COLORS_LIST) for v in DISTRICTS}, NEIGHBORS, NAMES)
+        self.run_animation()
+
+    def start_ac3(self):
+        self.stop_and_reset()
+        self.log("BẮT ĐẦU GIẢI BẰNG THUẬT TOÁN AC-3 (MAC)...", "step")
+        self.current_generator = ac3_search(DISTRICTS, {v: list(COLORS_LIST) for v in DISTRICTS}, NEIGHBORS, NAMES)
+        self.run_animation()
+
+    def start_min_conflicts(self):
+        self.stop_and_reset()
+        self.log("BẮT ĐẦU GIẢI BẰNG THUẬT TOÁN MIN-CONFLICTS...", "step")
+        self.current_generator = min_conflicts_search(DISTRICTS, {v: list(COLORS_LIST) for v in DISTRICTS}, NEIGHBORS, NAMES, max_steps=150)
         self.run_animation()
 
     def run_animation(self):
