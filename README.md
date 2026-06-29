@@ -4,6 +4,7 @@
 * **Họ và tên:** Nguyễn Anh Quân
 * **Mã số sinh viên (MSSV):** 24110309
 * **Môn học:** Introduction to Artificial Intelligence (AI) - Project & Algorithms Visualizer
+* **Link Github:**https://github.com/williamng252/BT_tri_tue_nhan_tao.git
 
 📌 **Tổng quan dự án**
 Dự án này là nơi lưu trữ các bài tập thực hành và đồ án nhỏ cho môn học Nhập môn Trí tuệ Nhân tạo (Introduction to AI). Nội dung bao gồm việc xây dựng các Agent phản xạ (Reflex Agents) và triển khai các thuật toán tìm kiếm từ cơ bản đến nâng cao.
@@ -46,7 +47,7 @@ AI/
 └── README.md                      # Tài liệu giới thiệu dự án (File này)
 ```
 
-🤖 **Các thuật toán & Agent đã cài đặt**
+ **Các thuật toán & Agent đã cài đặt**
 
 ### 1. Agents phản xạ (Reflex Agents)
 * **Simple Reflex Agent:** Đưa ra quyết định hành động chỉ dựa trên cảm nhận hiện tại (Condition-Action Rules). Áp dụng cho robot hút bụi di chuyển ngẫu nhiên/theo quy tắc và giải bài toán 8-Puzzle.
@@ -54,7 +55,7 @@ AI/
 
 ---
 
-🤖 **Các thuật toán tìm kiếm (6 Nhóm)**
+ **Các thuật toán tìm kiếm (6 Nhóm)**
 
 ### Nhóm 1: Uninformed Search (Tìm kiếm không thông tin / Tìm kiếm mù)
 Các thuật toán tìm kiếm mù duyệt qua không gian trạng thái mà không có thông tin bổ sung về khoảng cách đến mục tiêu ngoài định nghĩa bài toán.
